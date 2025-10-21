@@ -1,2 +1,107 @@
-<!doctype html><meta charset="utf-8"><title>OK</title>
-<h1>It works</h1>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Bottom Dock Menu</title>
+<style>
+  :root{
+    --glass: rgba(255,255,255,.12);
+    --pill-bg:#16181f;
+    --text:#fff;
+    --shadow:0 10px 28px rgba(0,0,0,.35);
+    --active: linear-gradient(135deg,#0f1118, #212533 60%, #2c2a24);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:transparent}
+  body{
+    display:grid;place-items:end center;
+    padding:0 env(safe-area-inset-right) calc(12px + env(safe-area-inset-bottom)) env(safe-area-inset-left);
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  }
+  .dock{
+    display:flex;align-items:center;gap:28px;
+    padding:10px 22px;border-radius:40px;
+    background:var(--glass);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    box-shadow:var(--shadow);
+  }
+  .tab{
+    display:flex;align-items:center;gap:10px;
+    text-decoration:none;color:var(--text);
+    font-weight:600;font-size:16px;line-height:1;
+    padding:8px 14px;border-radius:24px;
+    -webkit-tap-highlight-color:transparent;
+    transition:opacity .18s,transform .12s,background .18s;
+  }
+  .tab:hover{opacity:.9}
+  .tab:active{transform:translateY(1px)}
+  .tab svg{width:20px;height:20px;stroke:currentColor}
+  .tab[aria-current="page"]{background:var(--active);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+  @media (max-width:480px){
+    .dock{gap:22px;padding:8px 18px}
+    .tab{font-size:15px;padding:8px 12px;gap:8px}
+    .tab svg{width:18px;height:18px}
+  }
+</style>
+</head>
+<body>
+  <nav class="dock" role="navigation" aria-label="Quick actions">
+    <a class="tab" data-key="menu" href="/menu" target="_top" aria-label="Menu">
+      <!-- utensils -->
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 3v7"/><path d="M8 3v7"/><path d="M6 3v7"/><path d="M4 10c0 4 2 6 2 11"/><path d="M8 10c0 4-2 6-2 11"/>
+        <path d="M14 3h4v7a2 2 0 0 1-2 2 2 2 0 0 1-2-2z"/><path d="M16 12v9"/>
+      </svg>
+      <span>Menu</span>
+    </a>
+
+    <a class="tab" data-key="rewards" href="/rewards" target="_top" aria-label="Rewards">
+      <!-- gift -->
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+        <path d="M12 7V3"/>
+        <path d="M9 4.5c0 1.4 1.5 2.5 3 2.5s3-1.1 3-2.5S13.5 2 12 3.5 9 3.1 9 4.5z"/>
+      </svg>
+      <span>Rewards</span>
+    </a>
+
+    <a class="tab" data-key="order" href="/order" target="_top" aria-label="Order">
+      <!-- cart -->
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 6h15l-1.5 9H7.5L6 6z"/>
+        <circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/>
+      </svg>
+      <span>Order</span>
+    </a>
+  </nav>
+
+<script>
+  // ---- CONFIG: set your real paths here
+  const config = {
+    links: { menu: '/menu', rewards: '/rewards', order: '/order' },
+    hideOn: [/^\/order(?:\/|$)/i, /^\/checkout(?:\/|$)/i] // optional auto-hide
+  };
+
+  // apply links
+  for (const [key, url] of Object.entries(config.links)) {
+    const a = document.querySelector(`a.tab[data-key="${key}"]`);
+    if (a) a.href = url;
+  }
+
+  // auto-hide on excluded pages (if you embed there by accident)
+  const path = location.pathname || '/';
+  if (config.hideOn.some(rx => rx.test(path))) document.body.style.display = 'none';
+
+  // highlight active tab
+  const normalize = p => (p || '/').replace(/\/+$/,'') || '/';
+  const current = normalize(path).toLowerCase();
+  document.querySelectorAll('.tab').forEach(a => {
+    try{
+      const href = normalize(new URL(a.getAttribute('href'), location.origin).pathname).toLowerCase();
+      if (href !== '/' && current.startsWith(href)) a.setAttribute('aria-current','page');
+    }catch(_){}
+  });
+</script>
+</body>
+</html>
